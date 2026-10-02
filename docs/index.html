@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Thêm dấu tiếng Việt</title>
+<style>
+  :root { --bg: #fff; --fg: #1d1d1f; --muted: #6e6e73; --line: #d2d2d7; --low: #fff3cd; --accent: #0a66c2; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #161618; --fg: #f2f2f2; --muted: #9a9aa0; --line: #3a3a3c; --low: #4a3b00; --accent: #4ea1ff; }
+  }
+  body { background: var(--bg); color: var(--fg); font-family: system-ui, sans-serif; max-width: 760px;
+         margin: 32px auto; padding: 0 16px; line-height: 1.5; }
+  h1 { font-size: 22px; margin-bottom: 4px; }
+  p.sub { color: var(--muted); margin-top: 0; font-size: 14px; }
+  textarea { width: 100%; box-sizing: border-box; min-height: 90px; font-size: 16px; padding: 10px;
+             border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--fg); }
+  #out { min-height: 60px; font-size: 18px; padding: 12px; border: 1px solid var(--line); border-radius: 8px;
+         margin-top: 12px; white-space: pre-wrap; }
+  #out .low { background: var(--low); border-radius: 3px; }
+  .meta { font-size: 13px; color: var(--muted); margin-top: 6px; }
+  .ex button { margin: 8px 8px 0 0; padding: 4px 10px; border: 1px solid var(--line); background: transparent;
+               color: var(--accent); border-radius: 14px; cursor: pointer; font-size: 13px; }
+  a { color: var(--accent); }
+</style>
+</head>
+<body>
+<h1>Thêm dấu tiếng Việt</h1>
+<p class="sub">Transformer ~5M tham số, tự viết bằng PyTorch, chạy ngay trên trình duyệt (ONNX int8). Không gửi gì lên server.</p>
+
+<textarea id="in" placeholder="go tieng viet khong dau vao day...">toi dang di hoc o ha noi</textarea>
+<div class="ex">
+  <button>con ma nay that dang so</button>
+  <button>ma toi khong biet phai lam sao</button>
+  <button>xe may vuot den do phat bao nhieu tien</button>
+  <button>em oi toi nay di an lau khong</button>
+</div>
+<div id="out">đang tải model…</div>
+<div class="meta" id="meta"></div>
+<p class="meta">Chữ được tô vàng là chỗ model kém tự tin (&lt; 80%). Mã nguồn và cách train:
+  <a href="https://github.com/DuongCodeAI/vi-diacritics-transformer">GitHub</a></p>
+
+<script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.20.1/dist/ort.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
