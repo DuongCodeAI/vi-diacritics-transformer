@@ -46,9 +46,10 @@ def main():
 
     dummy = torch.randint(2, len(vocab), (1, 40))
     fp32 = out / "tagger.onnx"
+    # dynamo=False: exporter TorchScript cũ, đủ cho model này và không cần cài onnxscript
     torch.onnx.export(_Probs(model), (dummy,), str(fp32), input_names=["ids"], output_names=["probs"],
                       dynamic_axes={"ids": {0: "batch", 1: "seq"}, "probs": {0: "batch", 1: "seq"}},
-                      opset_version=args.opset)
+                      opset_version=args.opset, dynamo=False)
 
     from onnxruntime.quantization import QuantType, quantize_dynamic
 
