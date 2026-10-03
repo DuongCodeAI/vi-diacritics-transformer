@@ -127,6 +127,7 @@ def main():
     scaler = torch.amp.GradScaler(enabled=device.type == "cuda")
     total = args.epochs * len(dl)
     step, best, start_epoch = 0, -1.0, 0
+    resumed = False
 
     ckpt = out / "last.pt"
     if args.resume and ckpt.exists():
@@ -136,9 +137,11 @@ def main():
         scaler.load_state_dict(st["scaler"])
         step, best, start_epoch = st["step"], st["best"], st["epoch"]
         sampler.epoch = start_epoch
+        resumed = True
         print(f"resume từ step {step}")
 
-    log = (out / "log.jsonl").open("a", encoding="utf-8")
+    # train lại từ đầu (chưa có last.pt) thì ghi đè log cũ, không thì đường loss bị nối 2 lần chạy vào nhau
+    log = (out / "log.jsonl").open("a" if resumed else "w", encoding="utf-8")
     t_start = time.time()
     stop = False
     for epoch in range(start_epoch, args.epochs):

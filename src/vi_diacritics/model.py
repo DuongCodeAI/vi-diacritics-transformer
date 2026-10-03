@@ -132,10 +132,23 @@ def causal_mask(t: int, device=None):
     return torch.tril(torch.ones(t, t, dtype=torch.bool, device=device))[None, None]
 
 
+def _init_embedding(emb: nn.Embedding, d_model: int, pad_id: int) -> None:
+    """std = 1/sqrt(d) để sau khi nhân sqrt(d) embedding cỡ ~1, ngang biên độ positional encoding.
+
+    Mặc định của nn.Embedding là N(0, 1) -> nhân sqrt(256) = 16 thì PE bị lấn át 16 lần, model gần như
+    không biết ký tự nào đứng cạnh ký tự nào. Lần train đầu trên Colab bị kẹt ở word_acc ~0.22
+    (= đoán "không dấu" cho mọi ký tự) suốt 6000 step vì lỗi này.
+    """
+    nn.init.normal_(emb.weight, 0.0, d_model**-0.5)
+    with torch.no_grad():
+        emb.weight[pad_id].zero_()
+
+
 class Encoder(nn.Module):
     def __init__(self, vocab_size, d_model, n_heads, n_layers, d_ff, dropout, max_len=2048, pad_id=0):
         super().__init__()
         self.emb = nn.Embedding(vocab_size, d_model, padding_idx=pad_id)
+        _init_embedding(self.emb, d_model, pad_id)
         self.pos = SinusoidalPositionalEncoding(d_model, max_len)
         self.layers = nn.ModuleList(EncoderLayer(d_model, n_heads, d_ff, dropout) for _ in range(n_layers))
         self.ln = nn.LayerNorm(d_model)
@@ -181,6 +194,7 @@ class Seq2SeqTransformer(nn.Module):
         self.pad_id = pad_id
         self.encoder = Encoder(src_vocab, d_model, n_heads, n_enc, d_ff, dropout, pad_id=pad_id)
         self.tgt_emb = nn.Embedding(tgt_vocab, d_model, padding_idx=pad_id)
+        _init_embedding(self.tgt_emb, d_model, pad_id)
         self.pos = SinusoidalPositionalEncoding(d_model)
         self.layers = nn.ModuleList(DecoderLayer(d_model, n_heads, d_ff, dropout) for _ in range(n_dec))
         self.ln = nn.LayerNorm(d_model)
