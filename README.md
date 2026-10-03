@@ -25,18 +25,20 @@ Coi như dịch máy: câu không dấu → câu có dấu, token BPE tự train
 
 ## Kết quả
 
-> Chưa chạy. Điền sau khi train trên Kaggle (notebook 01-04).
+> Baseline đã chạy (Colab, 03/10/2026, notebook 01). Các dòng tagger / seq2seq điền sau khi train (notebook 02-04).
 
 Tập test: 3.000 câu Wikipedia (không trùng train), `nrl-ai/vn-diacritic-eval` (4 thể loại),
 và ~60 câu kiểu tin nhắn tự soạn (`data/real_typing.txt`). ms/câu đo trên CPU 1 luồng.
 
 | tập | hệ thống | char acc | word acc | sent acc | bịa chữ | ms/câu |
 |---|---|---|---|---|---|---|
-| wiki | bigram baseline | | | | 0% | |
+| wiki | bigram baseline | 0.900 | 0.855 | 0.170 | 0% | |
 | wiki | tagger fp32 | | | | 0% | |
 | wiki | tagger int8 | | | | 0% | |
 | wiki | seq2seq | | | | | |
 | tin nhắn | tagger int8 | | | | 0% | |
+| nrl (1.227 câu) | bigram baseline | 0.836 | 0.764 | 0.117 | 0% | |
+| nrl trang trọng / kinh doanh / hội thoại / văn học | bigram baseline | | 0.885 / 0.819 / 0.788 / 0.733 | | 0% | |
 | nrl hội thoại / văn học | tagger int8 | | | | 0% | |
 
 - char acc chỉ tính trên ký tự "có lựa chọn" (nguyên âm, d); tính cả phụ âm/dấu cách thì số đẹp giả.
