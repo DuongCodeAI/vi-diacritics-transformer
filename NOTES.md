@@ -35,12 +35,25 @@
   ~100+ lượt qua dữ liệu mới thoát pha "đoán lớp đa số". Không phải bug, chỉ là smoke test quá ngắn.
 - torch 2.14 export ONNX mặc định dùng dynamo (cần onnxscript) → dùng `dynamo=False`.
 
+## Lần train thật đầu tiên bị kẹt (Colab T4, 03/10)
+- Từ step 2.000 đến 8.000: word acc đứng yên 0.219-0.225, char acc ~0.45 = đúng bằng "để nguyên không dấu".
+  Loss cũng chỉ 0.61 → 0.55. Lần này không phải smoke test ngắn: 8.000 step x 128 câu là 1 triệu câu.
+- Nguyên nhân: `nn.Embedding` khởi tạo N(0, 1), rồi nhân sqrt(d_model) = 16 như paper → embedding cỡ 16,
+  trong khi positional encoding chỉ cỡ 1. Thông tin vị trí bị lấn át, mà pre-LN còn chuẩn hoá luôn đầu vào
+  mỗi layer → model gần như là "túi ký tự", không biết ký tự nào đứng cạnh ký tự nào → không phân biệt được
+  "ma" trong "con ma" với "ma" trong "mà thôi".
+- Paper gốc nhân sqrt(d) vì embedding khởi tạo nhỏ (std 1/sqrt(d)) và dùng chung với lớp output. Sửa: khởi tạo
+  std = 1/sqrt(d) (`_init_embedding` trong `model.py`).
+- Sau khi sửa: step 2.000 word acc 0.731 (trước 0.219), step 32.000 lên 0.945.
+- Bài học: nhân sqrt(d) chỉ đúng khi đi cùng cách khởi tạo của nó; nên in tỉ lệ norm(embedding)/norm(PE) ngay
+  khi dựng model.
+
 ## Restorer
 - Giữ nguyên ký tự người dùng đã gõ có dấu (gõ thiếu dấu vài chữ là chuyện thường).
 - `min_conf`: từ kém tự tin để nguyên không dấu. Với RAG, chữ không dấu vẫn khớp được index bỏ dấu;
   thêm sai dấu thì hỏng hẳn.
 
 ## Việc cần làm
-- Train thật, điền bảng.
+- Chạy notebook 03 (seq2seq) và 04 (test + int8 + tốc độ), điền nốt bảng.
 - Thử tăng d_model hoặc thêm dữ liệu hội thoại nếu tập tin nhắn yếu.
 - Bổ sung câu nhắn tin thật của mình vào `data/real_typing.txt` (hiện là câu tự soạn).

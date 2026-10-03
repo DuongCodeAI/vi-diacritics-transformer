@@ -25,7 +25,24 @@ Coi như dịch máy: câu không dấu → câu có dấu, token BPE tự train
 
 ## Kết quả
 
-> Baseline đã chạy (Colab, 03/10/2026, notebook 01). Các dòng tagger / seq2seq điền sau khi train (notebook 02-04).
+> Baseline (notebook 01) và tagger (notebook 02) đã chạy trên Colab ngày 03/10/2026. Các ô trống (tập test,
+> int8, seq2seq) điền sau khi chạy notebook 03-04.
+
+**Tagger trên tập val** (3.000 câu Wikipedia, cùng phân phối với test, đo lúc train bằng PyTorch fp32):
+
+| step | epoch | phút T4 | char acc | word acc | sent acc | bịa chữ |
+|---|---|---|---|---|---|---|
+| 2.000 | 0.13 | 4 | 0.817 | 0.731 | 0.036 | 0% |
+| 8.000 | 0.51 | 15 | 0.928 | 0.894 | 0.248 | 0% |
+| 16.000 | 1.02 | 31 | 0.949 | 0.925 | 0.346 | 0% |
+| 32.000 | 2.05 | 62 | **0.963** | **0.945** | **0.454** | 0% |
+
+Model 4,82M tham số, batch 128. Dừng ở epoch 2.05 (kế hoạch 3 epoch) cho đỡ giờ GPU: val vẫn tăng nhưng chậm,
+~0.002 word acc mỗi 4.000 step.
+ONNX: fp32 21,5 MB, int8 7,2 MB. So với baseline bigram (word acc 0.855 trên test): giảm số âm tiết sai từ 14,5%
+xuống 5,5%, tức **ít lỗi hơn ~2,6 lần**.
+
+**Bảng đầy đủ** (tập test, notebook 04):
 
 Tập test: 3.000 câu Wikipedia (không trùng train), `nrl-ai/vn-diacritic-eval` (4 thể loại),
 và ~60 câu kiểu tin nhắn tự soạn (`data/real_typing.txt`). ms/câu đo trên CPU 1 luồng.
