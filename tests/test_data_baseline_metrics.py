@@ -28,6 +28,9 @@ def test_baseline_uses_context():
     m = NgramBaseline().fit(train)
     assert m.restore("con ma") == "con ma"
     assert m.restore("Ma toi khong biet") == "Mà tôi không biết"
+    # từ lạ / viết hoa lẫn lộn phải giữ nguyên chữ, không được tính là "bịa chữ"
+    assert m.restore("iPhone XYZ cua toi") == "iPhone XYZ cua tôi"
+    assert strip(m.restore("MA TOI")) == "MA TOI"
 
 
 def test_evaluate_and_confusions():

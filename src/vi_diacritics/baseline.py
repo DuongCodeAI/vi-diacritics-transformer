@@ -16,11 +16,14 @@ _TOKEN_RE = re.compile(r"(\w+)", re.UNICODE)
 
 
 def _restore_case(src: str, word: str) -> str:
-    if src.isupper() and len(src) > 1:
-        return word.upper()
-    if src[:1].isupper():
-        return word[:1].upper() + word[1:]
-    return word
+    """Chép kiểu hoa/thường của từng ký tự gốc sang từ đã thêm dấu (bỏ dấu không đổi độ dài).
+
+    Bản đầu chỉ xử lý "viết hoa hết" / "hoa chữ đầu" -> "iPhone", "McDonald" bị đổi chữ, chạy trên
+    Colab ra hallucination_rate 1.6% cho baseline (lẽ ra phải 0).
+    """
+    if len(src) != len(word):
+        return src
+    return "".join(c.upper() if s.isupper() else c for s, c in zip(src, word, strict=True))
 
 
 class NgramBaseline:
@@ -52,7 +55,7 @@ class NgramBaseline:
                 continue
             f = strip(p).lower()
             cand = self.bi.get((prev, f)) or self.uni.get(f)
-            w = cand.most_common(1)[0][0] if cand else f
+            w = cand.most_common(1)[0][0] if cand else p.lower()  # từ lạ: giữ nguyên, không đoán
             out.append(_restore_case(p, w))
             prev = w
         return "".join(out)
