@@ -25,8 +25,7 @@ Coi như dịch máy: câu không dấu → câu có dấu, token BPE tự train
 
 ## Kết quả
 
-> Baseline (notebook 01) và tagger (notebook 02) đã chạy trên Colab ngày 03/10/2026. Các ô trống (tập test,
-> int8, seq2seq) điền sau khi chạy notebook 03-04.
+> Baseline, tagger, đánh giá tập test đã chạy thật trên Colab (03-04/10/2026). Dòng seq2seq điền sau notebook 03.
 
 **Tagger trên tập val** (3.000 câu Wikipedia, cùng phân phối với test, đo lúc train bằng PyTorch fp32):
 
@@ -42,21 +41,32 @@ Model 4,82M tham số, batch 128. Dừng ở epoch 2.05 (kế hoạch 3 epoch) c
 ONNX: fp32 21,5 MB, int8 7,2 MB. So với baseline bigram (word acc 0.855 trên test): giảm số âm tiết sai từ 14,5%
 xuống 5,5%, tức **ít lỗi hơn ~2,6 lần**.
 
-**Bảng đầy đủ** (tập test, notebook 04):
-
-Tập test: 3.000 câu Wikipedia (không trùng train), `nrl-ai/vn-diacritic-eval` (4 thể loại),
-và ~60 câu kiểu tin nhắn tự soạn (`data/real_typing.txt`). ms/câu đo trên CPU 1 luồng.
+**Tập test** (notebook 04, Colab CPU, 04/10/2026). Wikipedia: 3.000 câu không trùng train. nrl: bộ ngoài
+`nrl-ai/vn-diacritic-eval` (1.227 câu, 4 thể loại). Tin nhắn: 60 câu kiểu chat tự soạn (`data/real_typing.txt`).
+ms/câu đo bằng onnxruntime, CPU 1 luồng.
 
 | tập | hệ thống | char acc | word acc | sent acc | bịa chữ | ms/câu |
 |---|---|---|---|---|---|---|
-| wiki | bigram baseline | 0.900 | 0.855 | 0.170 | 0% | |
-| wiki | tagger fp32 | | | | 0% | |
-| wiki | tagger int8 | | | | 0% | |
+| wiki | bigram baseline | 0.899 | 0.854 | 0.168 | 0% | 0.2 |
+| wiki | tagger fp32 | 0.965 | 0.948 | 0.476 | 0% | 17.7 |
+| wiki | **tagger int8** | **0.965** | **0.948** | **0.474** | 0% | **12.0** |
+| nrl (cả 4) | bigram baseline | 0.836 | 0.764 | 0.117 | 0% | 0.1 |
+| nrl (cả 4) | tagger int8 | 0.914 | 0.875 | 0.278 | 0% | 7.0 |
+| nrl trang trọng | baseline → tagger int8 | | 0.885 → **0.977** | | 0% | |
+| nrl kinh doanh | baseline → tagger int8 | | 0.819 → **0.902** | | 0% | |
+| nrl hội thoại | baseline → tagger int8 | | 0.788 → **0.885** | | 0% | |
+| nrl văn học | baseline → tagger int8 | | 0.733 → **0.853** | | 0% | |
+| tin nhắn | bigram baseline | 0.780 | 0.664 | 0.100 | 0% | 0.1 |
+| tin nhắn | tagger int8 | 0.823 | 0.731 | 0.050 | 0% | 3.6 |
 | wiki | seq2seq | | | | | |
-| tin nhắn | tagger int8 | | | | 0% | |
-| nrl (1.227 câu) | bigram baseline | 0.836 | 0.764 | 0.117 | 0% | |
-| nrl trang trọng / kinh doanh / hội thoại / văn học | bigram baseline | | 0.885 / 0.819 / 0.788 / 0.733 | | 0% | |
-| nrl hội thoại / văn học | tagger int8 | | | | 0% | |
+
+Đọc bảng:
+- int8 gần như không mất gì (word acc 0.948 → 0.948), nhỏ hơn 3 lần (21,5 → 7,2 MB), nhanh hơn ~1,5 lần.
+- Văn viết rất tốt (trang trọng 0.977), văn học / hội thoại kém hơn: Wikipedia ít câu kiểu đó.
+- **Tin nhắn là điểm yếu thật**: word acc chỉ 0.731. Lỗi điển hình: đại từ thân mật bị đoán theo văn viết
+  ("tao" → "tạo", "mày" → "may", "anh" → "ảnh"), từ ngắn đứng cuối câu ("ạ", "nha", "nhé"), tiếng lóng
+  ("đen thật sự"). Cần thêm dữ liệu chat thật để train, không phải model to hơn.
+- Bịa chữ 0% ở mọi tập: tagger chỉ gắn dấu, không thể đổi chữ.
 
 - char acc chỉ tính trên ký tự "có lựa chọn" (nguyên âm, d); tính cả phụ âm/dấu cách thì số đẹp giả.
 - word acc là số người dùng cảm nhận được.
