@@ -41,8 +41,8 @@ Coi như dịch máy: câu không dấu → câu có dấu, token BPE tự train
 
 Model 4,82M tham số, batch 128. Dừng ở epoch 2.05 (kế hoạch 3 epoch) cho đỡ giờ GPU: val vẫn tăng nhưng chậm,
 ~0.002 word acc mỗi 4.000 step.
-ONNX: fp32 21,5 MB, int8 7,2 MB. So với baseline bigram (word acc 0.855 trên test): giảm số âm tiết sai từ 14,5%
-xuống 5,5%, tức **ít lỗi hơn ~2,6 lần**.
+ONNX: fp32 21,5 MB, int8 7,2 MB. Trên cùng tập test Wikipedia (bảng dưới): baseline bigram word acc 0.854,
+tagger int8 0.948, số âm tiết sai giảm từ 14,6% xuống 5,2%, tức **ít lỗi hơn ~2,8 lần**.
 
 **Tập test** (notebook 04, Colab CPU, 04/10/2026). Wikipedia: 3.000 câu không trùng train. nrl: bộ ngoài
 `nrl-ai/vn-diacritic-eval` (1.227 câu, 4 thể loại). Tin nhắn: 60 câu kiểu chat tự soạn (`data/real_typing.txt`).
