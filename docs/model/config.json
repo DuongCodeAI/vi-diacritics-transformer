@@ -1,0 +1,10 @@
+{
+  "task": "tagger",
+  "vocab_size": 302,
+  "n_labels": 30,
+  "d_model": 256,
+  "heads": 8,
+  "layers": 6,
+  "d_ff": 1024,
+  "dropout": 0.1
+}
