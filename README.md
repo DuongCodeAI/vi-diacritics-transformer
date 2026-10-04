@@ -1,5 +1,14 @@
 # vi-diacritics-transformer
 
+<!-- intro -->
+<p align="left">
+<img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python"> <img src="https://img.shields.io/badge/PyTorch-EE4C2C?style=for-the-badge&logo=pytorch&logoColor=white" alt="PyTorch"> <img src="https://img.shields.io/badge/Transformer%20from%20scratch-8E44AD?style=for-the-badge" alt="Transformer from scratch"> <img src="https://img.shields.io/badge/ONNX%20Web-005CED?style=for-the-badge&logo=onnx&logoColor=white" alt="ONNX Web"> <a href="https://duongcodeai.github.io/vi-diacritics-transformer/"><img src="https://img.shields.io/badge/Live%20demo-2ECC71?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Live demo"></a> <a href="https://huggingface.co/hgdkakhs/vi-diacritics-tagger"><img src="https://img.shields.io/badge/Hugging%20Face-FFD21E?style=for-the-badge&logo=huggingface&logoColor=white" alt="Hugging Face"></a>
+</p>
+
+> **Transformer tự viết, thêm dấu tiếng Việt.** Attention, multi-head, positional encoding tự viết bằng PyTorch thuần; đặt bài toán thành gán nhãn từng ký tự (30 lớp) nên không thể bịa chữ. Test Wikipedia word acc **0.948** (baseline bigram 0.854, ít lỗi hơn ~2.8 lần), int8 7.2 MB chạy trong trình duyệt ([demo](https://duongcodeai.github.io/vi-diacritics-transformer/)). So với seq2seq (nhiều tham số gấp đôi): seq2seq thua (0.919), đổi chữ ở 3.2% câu và chậm ~12 lần. Điểm yếu đã đo: tin nhắn chat chỉ 0.731.
+
+> Một phần của bộ 5 dự án [Trợ lý lái xe tiếng Việt chạy offline](https://github.com/DuongCodeAI) · tác giả: Tiến Dương
+
 Thêm dấu cho tiếng Việt gõ không dấu bằng **Transformer tự viết từ đầu** (PyTorch thuần, không dùng
 `nn.Transformer` / `nn.MultiheadAttention`), chạy ONNX int8 trên CPU và **ngay trên trình duyệt**.
 
