@@ -28,7 +28,7 @@ Coi như dịch máy: câu không dấu → câu có dấu, token BPE tự train
 
 ## Kết quả
 
-> Baseline, tagger, đánh giá tập test đã chạy thật trên Colab (03-04/10/2026). Dòng seq2seq điền sau notebook 03.
+> Mọi số dưới đây đã chạy thật trên Colab (03-04/10/2026): baseline, tagger, seq2seq, đánh giá tập test.
 
 **Tagger trên tập val** (3.000 câu Wikipedia, cùng phân phối với test, đo lúc train bằng PyTorch fp32):
 
@@ -62,7 +62,6 @@ lần chạy trước đo được wiki int8 12 ms/câu, lần này 25 ms/câu. 
 | nrl văn học | baseline → tagger int8 | | 0.733 → **0.853** | | 0% | |
 | tin nhắn | bigram baseline | 0.780 | 0.664 | 0.100 | 0% | 0.1 |
 | tin nhắn | tagger int8 | 0.823 | 0.731 | 0.050 | 0% | 10.6 |
-| wiki | seq2seq | | | | | |
 
 Đọc bảng:
 - int8 gần như không mất gì (word acc 0.948 → 0.948), nhỏ hơn 3 lần (21,5 → 7,2 MB), nhanh hơn ~1,3 lần (32,1 → 25,0 ms/câu).
@@ -78,6 +77,43 @@ lần chạy trước đo được wiki int8 12 ms/câu, lần này 25 ms/câu. 
 
 - char acc chỉ tính trên ký tự "có lựa chọn" (nguyên âm, d); tính cả phụ âm/dấu cách thì số đẹp giả.
 - word acc là số người dùng cảm nhận được.
+
+### Tagger vs seq2seq
+
+Seq2seq (notebook 03): encoder-decoder 3+3 layer, d_model 256, BPE 8.000 token mỗi phía, 9,63M tham số
+(gấp đôi tagger vì có 2 bảng embedding + lớp chiếu ra 8.000 token). Train 1 epoch (15.600 step, batch 128) = 22 phút T4,
+ít hơn tagger (62 phút) nên chưa phải so sánh "cùng ngân sách"; mục đích là xem cách đặt bài toán khác nhau thế nào.
+
+Val (1.000 câu Wikipedia, đo lúc train):
+
+| step | phút T4 | word acc | sent acc | câu bị bịa chữ |
+|---|---|---|---|---|
+| 4.000 | 5 | 0.769 | 0.163 | 16,8% |
+| 8.000 | 11 | 0.883 | 0.327 | 4,8% |
+| 12.000 | 16 | **0.912** | 0.384 | 3,4% |
+
+Tập test (cùng tập với bảng trên; tagger và seq2seq đo trong cùng một lần chạy ở cuối notebook 03).
+Tagger: ONNX int8, CPU 1 luồng. Seq2seq: PyTorch trên **GPU T4**, greedy, từng câu một.
+
+| tập | hệ thống | word acc | sent acc | câu bịa chữ | ms/câu |
+|---|---|---|---|---|---|
+| wiki | tagger int8 | **0.948** | **0.475** | 0% | 13,2 (CPU) |
+| wiki | seq2seq | 0.919 | 0.405 | 3,2% | 158,8 (GPU) |
+| nrl (cả 4) | tagger int8 | **0.875** | **0.277** | 0% | 7,8 (CPU) |
+| nrl (cả 4) | seq2seq | 0.850 | 0.256 | 0,9% | 97,1 (GPU) |
+| tin nhắn | tagger int8 | **0.729** | 0.050 | 0% | 6,2 (CPU) |
+| tin nhắn | seq2seq | 0.687 | 0.050 | 0% | 61,7 (GPU) |
+
+Kết quả đầy đủ (từng thể loại nrl, fp32): `results/eval.md` trên HF `hgdkakhs/vi-diacritics-seq2seq`.
+
+Nhận xét:
+- Seq2seq thua tagger ở mọi tập (wiki 0.919 so với 0.948) dù nhiều tham số gấp đôi.
+- Nó **đổi chữ** ở 3,2% số câu wiki. Ví dụ thật trong notebook: "XXX.XXX" → "XXX.XXXX", "Λ" → "Ân".
+  Với tagger chuyện này không thể xảy ra vì mỗi ký tự chỉ được gắn dấu. Trong xe, câu lệnh bị đổi chữ là lỗi nặng
+  (đổi số điện thoại, đổi tên đường), nên đây là lý do chính chọn tagger.
+- Chậm hơn khoảng 10 lần dù chạy GPU, vì decoder sinh từng token và mỗi bước chạy lại toàn bộ (chưa có KV cache).
+  Tagger chỉ chạy encoder một lần.
+- Seq2seq mới train 1 epoch; train lâu hơn chắc chắn còn tăng, nhưng hai điểm yếu trên là do cách đặt bài toán.
 
 ## Chi tiết cài đặt
 
