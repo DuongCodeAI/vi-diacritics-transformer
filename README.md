@@ -4,8 +4,11 @@ Thêm dấu cho tiếng Việt gõ không dấu bằng **Transformer tự viết
 `nn.Transformer` / `nn.MultiheadAttention`), chạy ONNX int8 trên CPU và **ngay trên trình duyệt**.
 
 ```
-"xe may vuot den do phat bao nhieu"  ->  "xe máy vượt đèn đỏ phạt bao nhiêu"
+"Ha Noi la thu do cua Viet Nam"                ->  "Hà Nội là thủ đô của Việt Nam"
+"ma toi khong biet phai lam sao"               ->  "mà tôi không biết phải làm sao"
+"Xe may vuot den do bi phat bao nhieu tien?"   ->  "Xe máy vượt đến do bị phát bao nhiêu tiền?"   (sai: đèn đỏ, phạt)
 ```
+Dòng cuối là lỗi thật của model int8 hiện tại (đầu ra copy nguyên từ `Restorer`), xem phần "Tin nhắn là điểm yếu thật" bên dưới.
 
 Demo (chạy trong trình duyệt, không gửi gì lên server): https://duongcodeai.github.io/vi-diacritics-transformer/
 
@@ -43,29 +46,34 @@ xuống 5,5%, tức **ít lỗi hơn ~2,6 lần**.
 
 **Tập test** (notebook 04, Colab CPU, 04/10/2026). Wikipedia: 3.000 câu không trùng train. nrl: bộ ngoài
 `nrl-ai/vn-diacritic-eval` (1.227 câu, 4 thể loại). Tin nhắn: 60 câu kiểu chat tự soạn (`data/real_typing.txt`).
-ms/câu đo bằng onnxruntime, CPU 1 luồng.
+ms/câu đo bằng onnxruntime, CPU 1 luồng, lấy từ `results/eval.md` trên HF. CPU Colab dùng chung nên tốc độ dao động:
+lần chạy trước đo được wiki int8 12 ms/câu, lần này 25 ms/câu. So sánh fp32/int8 chỉ có nghĩa trong cùng một lần chạy.
 
 | tập | hệ thống | char acc | word acc | sent acc | bịa chữ | ms/câu |
 |---|---|---|---|---|---|---|
 | wiki | bigram baseline | 0.899 | 0.854 | 0.168 | 0% | 0.2 |
-| wiki | tagger fp32 | 0.965 | 0.948 | 0.476 | 0% | 17.7 |
-| wiki | **tagger int8** | **0.965** | **0.948** | **0.474** | 0% | **12.0** |
-| nrl (cả 4) | bigram baseline | 0.836 | 0.764 | 0.117 | 0% | 0.1 |
-| nrl (cả 4) | tagger int8 | 0.914 | 0.875 | 0.278 | 0% | 7.0 |
+| wiki | tagger fp32 | 0.965 | 0.948 | 0.476 | 0% | 32.1 |
+| wiki | **tagger int8** | **0.965** | **0.948** | **0.474** | 0% | **25.0** |
+| nrl (cả 4) | bigram baseline | 0.836 | 0.764 | 0.117 | 0% | 0.2 |
+| nrl (cả 4) | tagger int8 | 0.914 | 0.875 | 0.278 | 0% | 13.6 |
 | nrl trang trọng | baseline → tagger int8 | | 0.885 → **0.977** | | 0% | |
 | nrl kinh doanh | baseline → tagger int8 | | 0.819 → **0.902** | | 0% | |
 | nrl hội thoại | baseline → tagger int8 | | 0.788 → **0.885** | | 0% | |
 | nrl văn học | baseline → tagger int8 | | 0.733 → **0.853** | | 0% | |
 | tin nhắn | bigram baseline | 0.780 | 0.664 | 0.100 | 0% | 0.1 |
-| tin nhắn | tagger int8 | 0.823 | 0.731 | 0.050 | 0% | 3.6 |
+| tin nhắn | tagger int8 | 0.823 | 0.731 | 0.050 | 0% | 10.6 |
 | wiki | seq2seq | | | | | |
 
 Đọc bảng:
-- int8 gần như không mất gì (word acc 0.948 → 0.948), nhỏ hơn 3 lần (21,5 → 7,2 MB), nhanh hơn ~1,5 lần.
+- int8 gần như không mất gì (word acc 0.948 → 0.948), nhỏ hơn 3 lần (21,5 → 7,2 MB), nhanh hơn ~1,3 lần (32,1 → 25,0 ms/câu).
 - Văn viết rất tốt (trang trọng 0.977), văn học / hội thoại kém hơn: Wikipedia ít câu kiểu đó.
 - **Tin nhắn là điểm yếu thật**: word acc chỉ 0.731. Lỗi điển hình: đại từ thân mật bị đoán theo văn viết
   ("tao" → "tạo", "mày" → "may", "anh" → "ảnh"), từ ngắn đứng cuối câu ("ạ", "nha", "nhé"), tiếng lóng
   ("đen thật sự"). Cần thêm dữ liệu chat thật để train, không phải model to hơn.
+- **Từ ngữ giao thông** cũng sai nhiều dù câu viết chuẩn: "phạt" → "phát", "đội mũ" → "đổi mũ", "đèn đỏ" → "đến do".
+  Wikipedia ít câu về mức phạt giao thông; muốn dùng tốt trong vn-traffic-law-rag cần thêm dữ liệu miền này.
+- **Phân biệt hoa/thường**: "Ha Noi" → "Hà Nội" nhưng "ha noi" → "hạ nội", vì Wikipedia viết hoa tên riêng.
+  Chưa thử train thêm bản viết thường toàn bộ.
 - Bịa chữ 0% ở mọi tập: tagger chỉ gắn dấu, không thể đổi chữ.
 
 - char acc chỉ tính trên ký tự "có lựa chọn" (nguyên âm, d); tính cả phụ âm/dấu cách thì số đẹp giả.
