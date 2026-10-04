@@ -108,8 +108,7 @@ Kết quả đầy đủ (từng thể loại nrl, fp32): `results/eval.md` trê
 
 Nhận xét:
 - Seq2seq thua tagger ở mọi tập (wiki 0.919 so với 0.948) dù nhiều tham số gấp đôi.
-- Nó **đổi chữ** ở 3,2% số câu wiki. Ví dụ thật (`errors_wiki_seq2seq.json`): "XXX.XXX" → "XXX.XXXX", chữ Hy Lạp "Λ" → "Ăn",
-  "Nam Bộ kháng chiến" → "Nam Bộ kháng chiến kháng chiến".
+- Nó **đổi chữ** ở 3,2% số câu wiki. Ví dụ thật (`errors_wiki_seq2seq.json`): "XXX.XXX" → "XXX.XXXX", chữ Hy Lạp "Λ" → "Ăn".
   Với tagger chuyện này không thể xảy ra vì mỗi ký tự chỉ được gắn dấu. Trong xe, câu lệnh bị đổi chữ là lỗi nặng
   (đổi số điện thoại, đổi tên đường), nên đây là lý do chính chọn tagger.
 - Chậm hơn khoảng 10 lần dù chạy GPU, vì decoder sinh từng token và mỗi bước chạy lại toàn bộ (chưa có KV cache).
