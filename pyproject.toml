@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "Thêm dấu tiếng Việt bằng Transformer tự viết từ đầu (PyTorch), chạy ONNX trên CPU và trên trình duyệt"
 readme = "README.md"
 requires-python = ">=3.10"
+license = "MIT"
 authors = [{ name = "Tiến Dương", email = "duongcodeai2@gmail.com" }]
 dependencies = []
 
@@ -13,7 +14,7 @@ train = ["torch>=2.2", "numpy>=1.26", "tokenizers>=0.19", "datasets>=2.19", "mat
 dev = ["pytest>=8", "ruff>=0.5"]
 
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
